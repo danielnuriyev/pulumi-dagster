@@ -1,0 +1,4 @@
+encryptionsalt: v1:e4O2I8/9zcA=:v1:85os1YiBbpZIpAPx:6qtjCeE1uPDsdqVRkfazo29z8tM9FQ==
+config:
+  pulumi-dagster:postgresqlPassword:
+    secure: v1:W16miD21BEISsIil:R4EPDXz59oZtOCIX3FnpSDAJK1IVGYy6qMmFtvhWQqI=

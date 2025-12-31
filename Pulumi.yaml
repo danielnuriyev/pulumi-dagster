@@ -1,0 +1,6 @@
+name: pulumi-dagster
+description: dagster on k8s with pulumi
+runtime:
+  name: python
+  options:
+    toolchain: uv
