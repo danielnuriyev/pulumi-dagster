@@ -55,6 +55,8 @@ name: dagster
 nodes:
   - role: control-plane
   - role: worker
+  - role: worker
+  - role: worker
 ```
 
 Create the cluster:
