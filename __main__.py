@@ -37,6 +37,25 @@ dagster_values = {
             "limits": {"cpu": "1", "memory": "512Mi"},
             "requests": {"cpu": "1", "memory": "256Mi"}
         }
+    },
+    # User code deployments
+    "dagster-user-deployments": {
+        "enabled": True,
+        "enableSubchart": True,
+        "deployments": [
+            {
+                "name": "pipelines-dagster",
+                "image": {
+                    "repository": "pipelines-dagster",
+                    "tag": "latest",
+                    "pullPolicy": "IfNotPresent"
+                },
+                "dagsterApiGrpcArgs": [
+                    "-m", "pipelines_dagster.definitions"
+                ],
+                "port": 4000
+            }
+        ]
     }
 }
 
