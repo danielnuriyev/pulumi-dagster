@@ -39,20 +39,36 @@ dagster_values = {
             "requests": {"cpu": "1", "memory": "256Mi"}
         }
     },
-    # User code deployments
+    # User code deployments - separate workspaces for trino and s3
     "dagster-user-deployments": {
         "enabled": True,
         "enableSubchart": True,
         "deployments": [
             {
-                "name": "pipelines-dagster",
+                "name": "trino",
                 "image": {
                     "repository": "pipelines-dagster",
                     "tag": "latest",
                     "pullPolicy": "IfNotPresent"
                 },
                 "dagsterApiGrpcArgs": [
-                    "-m", "pipelines_dagster.definitions"
+                    "-m", "pipelines_dagster.trino_defs"
+                ],
+                "port": 4000,
+                "env": {
+                    "PIPELINES_CONFIG_DIR": "/app/pipelines",
+                    "S3_SECRET_KEY": s3_secret_key,
+                },
+            },
+            {
+                "name": "s3",
+                "image": {
+                    "repository": "pipelines-dagster",
+                    "tag": "latest",
+                    "pullPolicy": "IfNotPresent"
+                },
+                "dagsterApiGrpcArgs": [
+                    "-m", "pipelines_dagster.s3_defs"
                 ],
                 "port": 4000,
                 "env": {
