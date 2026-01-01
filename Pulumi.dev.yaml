@@ -2,3 +2,5 @@ encryptionsalt: v1:e4O2I8/9zcA=:v1:85os1YiBbpZIpAPx:6qtjCeE1uPDsdqVRkfazo29z8tM9
 config:
   pulumi-dagster:postgresqlPassword:
     secure: v1:W16miD21BEISsIil:R4EPDXz59oZtOCIX3FnpSDAJK1IVGYy6qMmFtvhWQqI=
+  pulumi-dagster:s3SecretKey:
+    secure: v1:30UHAR+rB70pxuR8:FEYqHisVBPDFf1z0dZRyA/HUa/quifQNguB8UqKksVs=

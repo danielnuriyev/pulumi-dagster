@@ -5,6 +5,7 @@ from pulumi_kubernetes.core.v1 import Namespace
 # Load configuration
 config = pulumi.Config()
 postgresql_password = config.require_secret("postgresqlPassword")
+s3_secret_key = config.get_secret("s3SecretKey") or ""
 
 # 1. Create a Kubernetes Namespace for Dagster
 dagster_ns = Namespace(
@@ -53,7 +54,11 @@ dagster_values = {
                 "dagsterApiGrpcArgs": [
                     "-m", "pipelines_dagster.definitions"
                 ],
-                "port": 4000
+                "port": 4000,
+                "env": {
+                    "PIPELINES_CONFIG_DIR": "/app/pipelines",
+                    "S3_SECRET_KEY": s3_secret_key,
+                },
             }
         ]
     }
