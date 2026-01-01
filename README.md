@@ -133,35 +133,67 @@ The deployment uses these default settings:
 
 To customize, modify the `dagster_values` dictionary in `__main__.py`.
 
-## Adding User Code Deployments
+## User Code Deployments
 
-The default chart includes an example user code deployment that will fail since it's a placeholder. To add your own:
+This project loads user code deployment configuration from the sibling `pipelines-dagster` project.
 
-1. Build and push your Dagster code to a container registry
-2. Update `dagster_values` in `__main__.py`:
+### Required Project Structure
 
-```python
-dagster_values = {
-    # ... existing config ...
-    "dagster-user-deployments": {
-        "enabled": True,
-        "deployments": [
-            {
-                "name": "my-user-code",
-                "image": {
-                    "repository": "your-registry/your-dagster-code",
-                    "tag": "latest",
-                    "pullPolicy": "Always"
-                },
-                "dagsterApiGrpcArgs": [
-                    "-m", "your_module"
-                ],
-                "port": 3030
-            }
-        ]
-    }
-}
 ```
+projects/
+├── pulumi-dagster/          # This project
+│   └── __main__.py
+└── pipelines-dagster/       # Required sibling project
+    └── dagster-deployment.yaml
+```
+
+### dagster-deployment.yaml Format
+
+The `pipelines-dagster` project must contain a `dagster-deployment.yaml` file with this format:
+
+```yaml
+# Docker image configuration
+image:
+  repository: pipelines-dagster    # Image name
+  tag: latest                      # Image tag
+  pullPolicy: IfNotPresent         # Always, IfNotPresent, or Never
+
+# List of deployments (each runs as a separate pod)
+deployments:
+  - name: my-deployment            # Unique deployment name
+    module: my_package.definitions # Python module with Dagster definitions
+    port: 4000                     # gRPC port (usually 4000)
+    env:                           # Optional environment variables
+      MY_VAR: my_value
+
+# Secrets to inject (loaded from Pulumi config)
+secrets:
+  - S3_SECRET_KEY                  # Maps to Pulumi config "s3secretkey"
+```
+
+### Building and Loading the Image
+
+Since Kind can't pull from your local Docker daemon, you must load images manually:
+
+```bash
+# Build the image
+cd ../pipelines-dagster
+docker build -t pipelines-dagster:latest .
+
+# Load into Kind
+kind load docker-image pipelines-dagster:latest --name dagster
+```
+
+### Setting Secrets
+
+For each secret listed in `dagster-deployment.yaml`, set it in Pulumi config:
+
+```bash
+# S3_SECRET_KEY -> s3secretkey
+pulumi config set --secret s3secretkey "your-secret-value"
+```
+
+The secret name is converted to lowercase with underscores removed for the Pulumi config key.
 
 ## Cleanup
 
@@ -199,7 +231,11 @@ kubectl logs -n dagster statefulset/dagster-postgresql
 kubectl rollout restart deployment/dagster-dagster-webserver -n dagster
 ```
 
-### Example user code failing
+### User code deployment failing
 
-The chart includes an example user code deployment that will crash loop. This is expected if you haven't added your own code. The webserver and daemon will still function.
+If your user code pod is crash looping:
+
+1. Check the logs: `kubectl logs -n dagster deployment/dagster-<deployment-name>`
+2. Verify the image was loaded into Kind: `docker exec dagster-control-plane crictl images | grep pipelines`
+3. Ensure `dagster-deployment.yaml` has the correct module path
 

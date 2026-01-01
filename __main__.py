@@ -1,11 +1,51 @@
 import pulumi
+import yaml
+from pathlib import Path
 from pulumi_kubernetes.helm.v3 import Chart, ChartOpts, FetchOpts
 from pulumi_kubernetes.core.v1 import Namespace
 
 # Load configuration
 config = pulumi.Config()
 postgresql_password = config.require_secret("postgresqlPassword")
-s3_secret_key = config.get_secret("s3SecretKey") or ""
+
+# Load deployment config from pipelines-dagster
+pipelines_dagster_path = Path(__file__).parent.parent / "pipelines-dagster"
+deployment_config_path = pipelines_dagster_path / "dagster-deployment.yaml"
+
+with open(deployment_config_path) as f:
+    deployment_config = yaml.safe_load(f)
+
+# Build secrets map from Pulumi config
+secrets = {}
+for secret_name in deployment_config.get("secrets", []):
+    # Convert SECRET_NAME to secretName for Pulumi config lookup
+    config_key = secret_name.lower().replace("_", "")
+    secret_value = config.get_secret(config_key) or ""
+    secrets[secret_name] = secret_value
+
+# Build Helm deployments from config
+def build_deployments(cfg: dict, secrets: dict) -> list:
+    image = cfg["image"]
+    deployments = []
+    for dep in cfg["deployments"]:
+        env = dict(dep.get("env", {}))
+        # Inject secrets into env
+        for secret_name, secret_value in secrets.items():
+            env[secret_name] = secret_value
+        deployments.append({
+            "name": dep["name"],
+            "image": {
+                "repository": image["repository"],
+                "tag": image["tag"],
+                "pullPolicy": image["pullPolicy"]
+            },
+            "dagsterApiGrpcArgs": ["-m", dep["module"]],
+            "port": dep["port"],
+            "env": env,
+        })
+    return deployments
+
+user_deployments = build_deployments(deployment_config, secrets)
 
 # 1. Create a Kubernetes Namespace for Dagster
 dagster_ns = Namespace(
@@ -39,44 +79,11 @@ dagster_values = {
             "requests": {"cpu": "1", "memory": "256Mi"}
         }
     },
-    # User code deployments - separate workspaces for trino and s3
+    # User code deployments - loaded from pipelines-dagster/dagster-deployment.yaml
     "dagster-user-deployments": {
         "enabled": True,
         "enableSubchart": True,
-        "deployments": [
-            {
-                "name": "trino",
-                "image": {
-                    "repository": "pipelines-dagster",
-                    "tag": "latest",
-                    "pullPolicy": "IfNotPresent"
-                },
-                "dagsterApiGrpcArgs": [
-                    "-m", "pipelines_dagster.trino_defs"
-                ],
-                "port": 4000,
-                "env": {
-                    "PIPELINES_CONFIG_DIR": "/app/pipelines",
-                    "S3_SECRET_KEY": s3_secret_key,
-                },
-            },
-            {
-                "name": "s3",
-                "image": {
-                    "repository": "pipelines-dagster",
-                    "tag": "latest",
-                    "pullPolicy": "IfNotPresent"
-                },
-                "dagsterApiGrpcArgs": [
-                    "-m", "pipelines_dagster.s3_defs"
-                ],
-                "port": 4000,
-                "env": {
-                    "PIPELINES_CONFIG_DIR": "/app/pipelines",
-                    "S3_SECRET_KEY": s3_secret_key,
-                },
-            }
-        ]
+        "deployments": user_deployments
     }
 }
 

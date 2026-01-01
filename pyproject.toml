@@ -5,4 +5,5 @@ requires-python = ">=3.14"
 dependencies = [
     "pulumi>=3.0.0,<4.0.0",
     "pulumi-kubernetes>=4.24.1",
+    "pyyaml>=6.0",
 ]
