@@ -113,10 +113,10 @@ pulumi up --yes --stack dev
 Port-forward the webserver service:
 
 ```bash
-kubectl port-forward -n dagster svc/dagster-dagster-webserver 8080:80
+kubectl port-forward -n dagster svc/dagster-dagster-webserver 3000:80
 ```
 
-Then open http://localhost:8080
+Then open http://localhost:3000
 
 ## Configuration
 
