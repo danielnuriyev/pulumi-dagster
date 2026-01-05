@@ -166,12 +166,14 @@ source = { virtual = "." }
 dependencies = [
     { name = "pulumi" },
     { name = "pulumi-kubernetes" },
+    { name = "pyyaml" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "pulumi", specifier = ">=3.0.0,<4.0.0" },
     { name = "pulumi-kubernetes", specifier = ">=4.24.1" },
+    { name = "pyyaml", specifier = ">=6.0" },
 ]
 
 [[package]]

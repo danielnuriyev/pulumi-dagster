@@ -44,31 +44,16 @@ export PULUMI_CONFIG_PASSPHRASE="your-secure-passphrase"
 
 This passphrase encrypts your Pulumi secrets. Use the same passphrase consistently.
 
-### 5. Create a Kind Cluster
+### 5. Use the Trino Kind Cluster
 
-Create a file `kind-config.yaml`:
-
-```yaml
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-name: dagster
-nodes:
-  - role: control-plane
-  - role: worker
-  - role: worker
-  - role: worker
-```
-
-Create the cluster:
+This project deploys to the existing `trino` kind cluster. Make sure it's running:
 
 ```bash
-kind create cluster --config kind-config.yaml
-```
+kind get clusters
+# Should show 'trino' in the list
 
-Verify the cluster is running:
-
-```bash
 kubectl get nodes
+# Should show 4 nodes (1 control-plane + 3 workers)
 ```
 
 ### 6. Install Python Dependencies
@@ -180,8 +165,8 @@ Since Kind can't pull from your local Docker daemon, you must load images manual
 cd ../pipelines-dagster
 docker build -t pipelines-dagster:latest .
 
-# Load into Kind
-kind load docker-image pipelines-dagster:latest --name dagster
+# Load into the trino cluster
+kind load docker-image pipelines-dagster:latest --name trino
 ```
 
 ### Setting Secrets
@@ -203,11 +188,7 @@ Destroy all resources:
 pulumi destroy --yes --stack dev
 ```
 
-Delete the Kind cluster:
-
-```bash
-kind delete cluster --name dagster
-```
+**Note**: The trino cluster is shared with other services and should not be deleted.
 
 ## Troubleshooting
 
