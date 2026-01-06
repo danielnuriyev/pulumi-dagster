@@ -44,16 +44,19 @@ export PULUMI_CONFIG_PASSPHRASE="your-secure-passphrase"
 
 This passphrase encrypts your Pulumi secrets. Use the same passphrase consistently.
 
-### 5. Use the Trino Kind Cluster
+### 5. Use the Local Kind Cluster
 
-This project deploys to the existing `trino` kind cluster. Make sure it's running:
+This project deploys to the shared `local` kind cluster. Make sure it's running:
 
 ```bash
 kind get clusters
-# Should show 'trino' in the list
+# Should show 'local' in the list
+
+kubectl cluster-info --context kind-local
+# Should show cluster info for the local cluster
 
 kubectl get nodes
-# Should show 4 nodes (1 control-plane + 3 workers)
+# Should show 8 nodes (1 control-plane + 7 workers)
 ```
 
 ### 6. Install Python Dependencies
@@ -165,8 +168,8 @@ Since Kind can't pull from your local Docker daemon, you must load images manual
 cd ../pipelines-dagster
 docker build -t pipelines-dagster:latest .
 
-# Load into the trino cluster
-kind load docker-image pipelines-dagster:latest --name trino
+# Load into the local cluster
+kind load docker-image pipelines-dagster:latest --name local
 ```
 
 ### Setting Secrets
@@ -188,28 +191,28 @@ Destroy all resources:
 pulumi destroy --yes --stack dev
 ```
 
-**Note**: The trino cluster is shared with other services and should not be deleted.
+**Note**: The local cluster is shared with other services and should not be deleted.
 
 ## Troubleshooting
 
 ### Check pod status
 
 ```bash
-kubectl get pods -n dagster
+kubectl get pods -n dagster --context kind-local
 ```
 
 ### View logs
 
 ```bash
-kubectl logs -n dagster deployment/dagster-dagster-webserver
-kubectl logs -n dagster deployment/dagster-daemon
-kubectl logs -n dagster statefulset/dagster-postgresql
+kubectl logs -n dagster deployment/dagster-dagster-webserver --context kind-local
+kubectl logs -n dagster deployment/dagster-daemon --context kind-local
+kubectl logs -n dagster statefulset/dagster-postgresql --context kind-local
 ```
 
 ### Restart a deployment
 
 ```bash
-kubectl rollout restart deployment/dagster-dagster-webserver -n dagster
+kubectl rollout restart deployment/dagster-dagster-webserver -n dagster --context kind-local
 ```
 
 ### User code deployment failing
