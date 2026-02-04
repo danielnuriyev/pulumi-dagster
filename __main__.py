@@ -68,8 +68,9 @@ dagster_values = {
     },
     "dagsterWebserver": {
         "service": {
-            "type": "ClusterIP",  # Use LoadBalancer if you want direct access via localhost on Docker Desktop
-            "port": 80
+            "type": "NodePort",
+            "nodePort": 3000,
+            "port": 3000
         }
     },
     # In a local environment, you might want to adjust resource limits if your machine is constrained

@@ -10,34 +10,16 @@ nodes:
       kubeletExtraArgs:
         node-labels: "ingress-ready=true"
   extraPortMappings:
-  # Minio
-  - containerPort: 9000
-    hostPort: 9000
-    protocol: TCP
-  - containerPort: 9001
-    hostPort: 9001
-    protocol: TCP
-  # Nessie
-  - containerPort: 19120
-    hostPort: 19120
-    protocol: TCP
-  # Trino
-  - containerPort: 8080
-    hostPort: 8080
-    protocol: TCP
-  # Snowflake Emulator
-  - containerPort: 8081
-    hostPort: 8081
-    protocol: TCP
-  # Dagster
+  # Dagster Webserver (UI)
   - containerPort: 3000
     hostPort: 3000
     protocol: TCP
-  - containerPort: 4000
-    hostPort: 4000
+  # Ingress Controller (HTTP/HTTPS)
+  - containerPort: 80
+    hostPort: 80
     protocol: TCP
-  - containerPort: 4266
-    hostPort: 4266
+  - containerPort: 443
+    hostPort: 443
     protocol: TCP
 # Worker nodes
 - role: worker
