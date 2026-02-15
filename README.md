@@ -1,6 +1,6 @@
 # Dagster on Kubernetes with Pulumi
 
-Deploy Dagster to a local Kubernetes cluster using Pulumi and the official Dagster Helm chart.
+Deploy Dagster to a local Kubernetes cluster.
 
 ## Architecture
 
